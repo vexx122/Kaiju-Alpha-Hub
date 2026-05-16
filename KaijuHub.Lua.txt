@@ -6,201 +6,62 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 
-print("Kaiju Hub Loading...")
+--------------------------------------------------
+-- LOADING SCREEN
+--------------------------------------------------
 
--- GUI PARENT FIX
-local parentGui
-
-pcall(function()
-	parentGui = game:GetService("CoreGui")
-end)
-
-if not parentGui then
-	parentGui = player:WaitForChild("PlayerGui")
-end
-
--- REMOVE OLD
-pcall(function()
-	parentGui:FindFirstChild("KaijuHub"):Destroy()
-end)
-
--- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "KaijuHub"
 gui.ResetOnSpawn = false
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = parentGui
+pcall(function() gui.Parent = game.CoreGui end)
+if not gui.Parent then gui.Parent = player:WaitForChild("PlayerGui") end
+
+local loadFrame = Instance.new("Frame")
+loadFrame.Size = UDim2.new(1,0,1,0)
+loadFrame.BackgroundColor3 = Color3.fromRGB(15,10,25)
+loadFrame.Parent = gui
+
+local loadText = Instance.new("TextLabel")
+loadText.Size = UDim2.new(1,0,0,100)
+loadText.Position = UDim2.new(0,0,0.4,0)
+loadText.BackgroundTransparency = 1
+loadText.Text = "Loading Kaiju Hub..."
+loadText.TextColor3 = Color3.fromRGB(200,120,255)
+loadText.Font = Enum.Font.GothamBold
+loadText.TextScaled = true
+loadText.Parent = loadFrame
+
+task.wait(2)
+
+loadText.Text = "Work In Progress - Initializing UI"
+task.wait(1.5)
+
+loadFrame:Destroy()
+
+--------------------------------------------------
+-- MAIN UI
+--------------------------------------------------
 
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0,600,0,400)
 main.Position = UDim2.new(0.5,-300,0.5,-200)
-main.BackgroundColor3 = Color3.fromRGB(20,15,35)
+main.BackgroundColor3 = Color3.fromRGB(25,15,45)
 main.BorderSizePixel = 0
-main.Active = true
-main.Visible = true
 main.Parent = gui
 
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
 
-local stroke = Instance.new("UIStroke")
+local stroke = Instance.new("UIStroke", main)
 stroke.Color = Color3.fromRGB(180,0,255)
 stroke.Thickness = 2
-stroke.Parent = main
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,45)
-title.BackgroundColor3 = Color3.fromRGB(45,20,80)
-title.Text = "Kaiju Hub Made by Vex"
+title.BackgroundColor3 = Color3.fromRGB(60,20,90)
+title.Text = "Kaiju Hub Made by Vex (WIP)"
 title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Parent = main
 
-print("GUI OPENED")
-
--- DRAGGING
-local dragging = false
-local dragStart
-local startPos
-
-title.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
-	end
-end)
-
-UIS.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-
-UIS.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-
-		main.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-end)
-
--- BUTTON MAKER
-local function makeButton(text,x,y,parent)
-	local b = Instance.new("TextButton")
-
-	b.Size = UDim2.new(0,170,0,40)
-	b.Position = UDim2.new(0,x,0,y)
-	b.BackgroundColor3 = Color3.fromRGB(70,30,120)
-	b.TextColor3 = Color3.new(1,1,1)
-	b.TextScaled = true
-	b.Font = Enum.Font.GothamBold
-	b.Text = text
-	b.Parent = parent
-
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-
-	local s = Instance.new("UIStroke")
-	s.Color = Color3.fromRGB(180,0,255)
-	s.Parent = b
-
-	return b
-end
-
--- TABS
-local mainTab = Instance.new("Frame")
-mainTab.Size = UDim2.new(1,-20,1,-120)
-mainTab.Position = UDim2.new(0,10,0,110)
-mainTab.BackgroundTransparency = 1
-mainTab.Parent = main
-
-local trollTab = mainTab:Clone()
-trollTab.Visible = false
-trollTab.Parent = main
-
-local settingsTab = mainTab:Clone()
-settingsTab.Visible = false
-settingsTab.Parent = main
-
-local function switch(tab)
-	mainTab.Visible = false
-	trollTab.Visible = false
-	settingsTab.Visible = false
-	tab.Visible = true
-end
-
-makeButton("Main",10,60,main).MouseButton1Click:Connect(function()
-	switch(mainTab)
-end)
-
-makeButton("Troll",190,60,main).MouseButton1Click:Connect(function()
-	switch(trollTab)
-end)
-
-makeButton("Settings",370,60,main).MouseButton1Click:Connect(function()
-	switch(settingsTab)
-end)
-
--- MAIN TAB
-local unlockBtn = makeButton("Unlock All Kaijus",10,10,mainTab)
-
-unlockBtn.MouseButton1Click:Connect(function()
-	unlockBtn.Text = "Unlocked!"
-	task.wait(1)
-	unlockBtn.Text = "Unlock All Kaijus"
-end)
-
-local playerFarm = false
-
-local farmBtn = makeButton("Autofarm Players OFF",10,70,mainTab)
-
-farmBtn.MouseButton1Click:Connect(function()
-	playerFarm = not playerFarm
-	farmBtn.Text = playerFarm and "Autofarm Players ON" or "Autofarm Players OFF"
-end)
-
--- TROLL TAB
-local noclip = false
-
-local noclipBtn = makeButton("Noclip OFF",10,10,trollTab)
-
-noclipBtn.MouseButton1Click:Connect(function()
-	noclip = not noclip
-	noclipBtn.Text = noclip and "Noclip ON" or "Noclip OFF"
-end)
-
-RunService.Stepped:Connect(function()
-	if noclip and player.Character then
-		for _,v in pairs(player.Character:GetDescendants()) do
-			if v:IsA("BasePart") then
-				v.CanCollide = false
-			end
-		end
-	end
-end)
-
--- SETTINGS TAB
-local toggleKey = Enum.KeyCode.RightControl
-
-local keyLabel = Instance.new("TextLabel")
-keyLabel.Size = UDim2.new(0,300,0,40)
-keyLabel.Position = UDim2.new(0,10,0,10)
-keyLabel.BackgroundTransparency = 1
-keyLabel.Text = "Toggle Key: RightControl"
-keyLabel.TextScaled = true
-keyLabel.Font = Enum.Font.GothamBold
-keyLabel.TextColor3 = Color3.new(1,1,1)
-keyLabel.Parent = settingsTab
-
-UIS.InputBegan:Connect(function(input,gp)
-	if gp then return end
-
-	if input.KeyCode == toggleKey then
-		main.Visible = not main.Visible
-	end
-end)
+print("Kaiju Hub Loaded")
