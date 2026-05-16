@@ -1,3 +1,4 @@
+
 repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
@@ -64,4 +65,140 @@ title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Parent = main
 
+local userLabel = Instance.new("TextLabel")
+userLabel.Size = UDim2.new(1,0,0,25)
+userLabel.Position = UDim2.new(0,0,0,45)
+userLabel.BackgroundTransparency = 1
+userLabel.Text = "User: " .. player.Name
+userLabel.TextColor3 = Color3.fromRGB(200,200,255)
+userLabel.Font = Enum.Font.Gotham
+userLabel.TextScaled = true
+userLabel.Parent = main
+
+--------------------------------------------------
+-- DRAG
+--------------------------------------------------
+
+local dragging, dragStart, startPos
+
+title.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = i.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+--------------------------------------------------
+-- BUTTON FACTORY
+--------------------------------------------------
+
+local function btn(text,x,y,parent)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0,170,0,40)
+    b.Position = UDim2.new(0,x,0,y)
+    b.Text = text
+    b.Font = Enum.Font.GothamBold
+    b.TextColor3 = Color3.new(1,1,1)
+    b.TextScaled = true
+    b.BackgroundColor3 = Color3.fromRGB(80,30,140)
+    b.Parent = parent
+
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+    Instance.new("UIStroke", b).Color = Color3.fromRGB(200,0,255)
+
+    return b
+end
+
+--------------------------------------------------
+-- FLY (REALISTIC)
+--------------------------------------------------
+
+local flying = false
+local bv
+local bg
+
+local flyBtn = btn("Fly OFF",10,80,main)
+
+local function startFly()
+    local char = player.Character
+    if not char then return end
+
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    hum.PlatformStand = true
+
+    bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e6,1e6,1e6)
+    bv.Velocity = Vector3.zero
+    bv.Parent = hrp
+
+    bg = Instance.new("BodyGyro")
+    bg.MaxTorque = Vector3.new(1e6,1e6,1e6)
+    bg.CFrame = hrp.CFrame
+    bg.Parent = hrp
+
+    RunService:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
+        local cam = workspace.CurrentCamera
+        local dir = Vector3.zero
+
+        if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+
+        bv.Velocity = dir * 80
+        bg.CFrame = cam.CFrame
+    end)
+end
+
+local function stopFly()
+    RunService:UnbindFromRenderStep("Fly")
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = false end
+end
+
+flyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    flyBtn.Text = flying and "Fly ON" or "Fly OFF"
+
+    if flying then startFly() else stopFly() end
+end)
+
+--------------------------------------------------
+-- SIMPLE PLACEHOLDERS
+--------------------------------------------------
+
+btn("Unlock All Kaijus",10,140,main).MouseButton1Click:Connect(function()
+    print("Unlock feature placeholder")
+end)
+
+btn("Autofarm (WIP)",10,200,main).MouseButton1Click:Connect(function()
+    print("Autofarm placeholder")
+end)
+
 print("Kaiju Hub Loaded")
+```
